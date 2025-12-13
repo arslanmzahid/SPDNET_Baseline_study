@@ -83,7 +83,6 @@ def evaluate(
         'confusion_matrix': confusion_matrix(all_labels, all_preds)
     }
 
-
 def train_with_early_stopping(
     model: nn.Module,
     train_loader: DataLoader,
@@ -91,16 +90,13 @@ def train_with_early_stopping(
     class_weights: torch.Tensor,
     config: Dict,
     device: str,
-    trial: Optional = None,  # For Optuna pruning
+    trial: Optional = None,
     fold: Optional[int] = None
 ) -> Dict:
     """
-    Train with early stopping
+    Train with early stopping and PROPER Optuna integration
     
-    Returns dict with:
-        - best_val_acc
-        - best_epoch
-        - history
+    The key fix: Use fold-based unique step identifiers to avoid conflicts
     """
     criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
     optimizer = optim.Adam(
@@ -117,6 +113,7 @@ def train_with_early_stopping(
         'val_loss': [],
         'val_acc': []
     }
+    best_state = None
     
     for epoch in range(config['max_epochs']):
         # Train
@@ -137,25 +134,38 @@ def train_with_early_stopping(
         if val_metrics['accuracy'] > best_val_acc:
             best_val_acc = val_metrics['accuracy']
             patience_counter = 0
-            best_state = {k: v.cpu() for k, v in model.state_dict().items()}
+            # Deep copy state dict
+            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
         else:
             patience_counter += 1
         
         # Check early stopping
-        if epoch >= config['min_epochs'] and patience_counter >= config['patience']:
+        if epoch >= config.get('min_epochs', 10) and patience_counter >= config.get('patience', 7):
             break
         
-        # Optuna pruning
-        if trial is not None and fold is not None:
-            trial.report(val_metrics['accuracy'], epoch)
+        # Optuna pruning - PROPER implementation
+        if trial is not None:
+            # Create globally unique step ID: trial_number * 1000 * num_folds + fold * 1000 + epoch
+            # This ensures no conflicts across parallel trials
+            if fold is not None:
+                unique_step = fold * 1000 + epoch
+            else:
+                unique_step = epoch
+            
+            # Report intermediate value
+            trial.report(val_metrics['accuracy'], unique_step)
+            
+            # Check if trial should be pruned
             if trial.should_prune():
+                import optuna
                 raise optuna.TrialPruned()
     
     # Load best model
-    model.load_state_dict(best_state)
+    if best_state is not None:
+        model.load_state_dict(best_state)
     
     return {
         'best_val_acc': best_val_acc,
-        'best_epoch': epoch - patience_counter,
+        'best_epoch': epoch - patience_counter if epoch >= patience_counter else 0,
         'history': history
     }

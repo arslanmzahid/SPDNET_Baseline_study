@@ -7,7 +7,7 @@ echo "================================================"
 echo "QUICK NORMALIZATION SCREEN"
 echo "================================================"
 
-DATA_PATH="/Users/arslanzahid/Downloads/New_Journal_pipeline/data_pkl.npz"
+DATA_PATH="/teamspace/studios/this_studio/SPDNET_Baseline_study/data_pkl.npz"
 OUTPUT_DIR="./results/quick_screen"
 
 python experiments/quick_screen.py \

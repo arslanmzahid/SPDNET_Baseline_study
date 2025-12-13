@@ -7,7 +7,7 @@ echo "================================================"
 echo "OPTUNA HYPERPARAMETER OPTIMIZATION"
 echo "================================================"
 
-DATA_PATH="/Users/arslanzahid/Downloads/New_Journal_pipeline/data_pkl.npz"
+DATA_PATH="/teamspace/studios/this_studio/SPDNET_Baseline_study/data_pkl.npz"
 TOP3_FILE="./results/quick_screen/top3_strategies.json"
 OUTPUT_DIR="./results/optuna"
 

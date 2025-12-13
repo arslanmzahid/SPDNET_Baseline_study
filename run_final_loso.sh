@@ -7,7 +7,7 @@ echo "================================================"
 echo "FINAL LOSO VALIDATION"
 echo "================================================"
 
-DATA_PATH="/Users/arslanzahid/Downloads/New_Journal_pipeline/data_pkl.npz"
+DATA_PATH="/teamspace/studios/this_studio/SPDNET_Baseline_study/data_pkl.npz"
 BEST_PARAMS_FILE="./results/optuna/best_params.json"
 OUTPUT_DIR="./results/final_loso"
 

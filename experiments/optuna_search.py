@@ -58,12 +58,12 @@ class OptunaObjective:
         # Sample hyperparameters
         params = self._sample_hyperparameters(trial)
         
-        # Compute covariances with selected normalization
+        # Compute covariances with ROBUST epsilon
         covariances = batch_compute_covariances(
             self.trials_data,
             strategy=params['norm_strategy'],
             trace_norm=params['trace_norm'],
-            epsilon=1e-6,
+            epsilon=1e-4,  # ← PROPER epsilon (was 1e-6)
             verbose=False
         )
         
@@ -82,7 +82,8 @@ class OptunaObjective:
                 train_covs, test_covs = apply_alignment(
                     train_covs, test_covs,
                     method=params['alignment_method'],
-                    n_reference=10
+                    n_reference=10,
+                    epsilon = 1e-4
                 )
             
             # Further split train into train/val (80/20)
@@ -171,7 +172,7 @@ class OptunaObjective:
             'norm_strategy': selected_strategy['strategy'],
             'trace_norm': selected_strategy['trace_norm'],
             
-            # Alignment
+            # Alignment - NOW ROBUST, keep enabled
             'use_alignment': trial.suggest_categorical('use_alignment', [True, False]),
             'alignment_method': trial.suggest_categorical('alignment_method', ['ra', 'rpa_lem']),
             
