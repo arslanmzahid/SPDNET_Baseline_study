@@ -107,3 +107,4 @@ coverage.xml
 
 # Misc
 *.pyc
+data_pkl.npz
