@@ -290,12 +290,19 @@ def run_optuna_optimization(
     
     # Save best params
     best_params_file = output_path / "best_params.json"
+    strategy_idx = best_trial.params['strategy_idx']
+    selected_strategy = top_strategies[strategy_idx]
+
     best_params = {
         'trial_number': best_trial.number,
         'balanced_accuracy': best_trial.value,
         'std': best_trial.user_attrs.get('std_score', 0),
         'fold_scores': best_trial.user_attrs.get('fold_scores', []),
-        'params': best_trial.params
+        'params': {
+            **best_trial.params,  # All Optuna parameters
+            'norm_strategy': selected_strategy['strategy'],      # Add this
+            'trace_norm': selected_strategy['trace_norm']        # Add this
+        }
     }
     with open(best_params_file, 'w') as f:
         json.dump(best_params, f, indent=2)

@@ -6,6 +6,7 @@ All strategies tested systematically with robust SPD enforcement
 import numpy as np
 from typing import Literal, Optional
 from scipy.linalg import fractional_matrix_power
+from pyriemann.estimation import Covariances
 
 
 NormStrategy = Literal[
@@ -49,12 +50,12 @@ def ensure_spd(matrix: np.ndarray, epsilon: float = 1e-4) -> np.ndarray:
     
     return matrix_spd.astype(np.float32)
 
-
 def compute_covariance(
     trial: np.ndarray,
     strategy: NormStrategy = 'channel_center',
     trace_norm: bool = False,
-    epsilon: float = 1e-4
+    epsilon: float = 1e-4,
+    estimator: str = 'lwf'  # Ledoit-Wolf shrinkage
 ) -> np.ndarray:
     """
     Compute covariance matrix with specified normalization
@@ -64,6 +65,7 @@ def compute_covariance(
         strategy: Normalization strategy
         trace_norm: Whether to normalize by trace (post-covariance)
         epsilon: Regularization for SPD property (1e-4 is robust)
+        estimator: PyRiemann estimator ('lwf', 'oas', 'scm')
         
     Returns:
         cov: (n_channels, n_channels) - SPD covariance matrix
@@ -72,10 +74,14 @@ def compute_covariance(
     # Step 1: Apply normalization to raw signal
     trial_processed = apply_normalization(trial, strategy)
     
-    # Step 2: Compute covariance
-    cov = np.cov(trial_processed)
+    # Step 2: Compute ROBUST covariance using PyRiemann
+    # This handles ill-conditioning automatically with Ledoit-Wolf shrinkage
+    cov_estimator = Covariances(estimator=estimator)
+    # PyRiemann expects (n_trials, n_channels, n_timepoints)
+    trial_3d = trial_processed[np.newaxis, :, :]
+    cov = cov_estimator.fit_transform(trial_3d)[0]
     
-    # Step 3: Ensure SPD property (PROPER regularization)
+    # Step 3: Additional regularization (belt and suspenders)
     cov = ensure_spd(cov, epsilon=epsilon)
     
     # Step 4: Optional trace normalization
@@ -147,6 +153,7 @@ def batch_compute_covariances(
     strategy: NormStrategy = 'channel_center',
     trace_norm: bool = False,
     epsilon: float = 1e-4,
+    estimator: str = 'lwf',  # ADD THIS
     verbose: bool = True
 ) -> np.ndarray:
     """
@@ -157,6 +164,7 @@ def batch_compute_covariances(
         strategy: Normalization strategy
         trace_norm: Whether to normalize by trace
         epsilon: Regularization (1e-4 recommended)
+        estimator: PyRiemann estimator ('lwf', 'oas', 'scm')
         verbose: Show progress bar
         
     Returns:
@@ -177,11 +185,11 @@ def batch_compute_covariances(
             trials[i],
             strategy=strategy,
             trace_norm=trace_norm,
-            epsilon=epsilon
+            epsilon=epsilon,
+            estimator=estimator  # ADD THIS LINE
         )
     
     return covariances
-
 
 # Verify SPD property of batch
 def verify_spd_batch(covariances: np.ndarray, epsilon: float = 1e-4) -> dict:

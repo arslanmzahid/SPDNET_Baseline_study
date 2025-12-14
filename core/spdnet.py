@@ -11,16 +11,25 @@ from typing import Tuple
 class BiMap(nn.Module):
     """Bilinear mapping on SPD manifold"""
     
-    def __init__(self, input_dim: int, output_dim: int):
+    def __init__(self, input_dim: int, output_dim: int, epsilon: float = 1e-4):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.epsilon = epsilon  # ADD THIS
         self.W = nn.Parameter(torch.empty(output_dim, input_dim))
         nn.init.orthogonal_(self.W)
     
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         """X: (batch, input_dim, input_dim) -> (batch, output_dim, output_dim)"""
-        return self.W @ X @ self.W.transpose(-2, -1)
+        result = self.W @ X @ self.W.transpose(-2, -1)
+        
+        # ADD REGULARIZATION HERE (crucial for stability)
+        result = (result + result.transpose(-2, -1)) / 2  # Ensure symmetry
+        # Add small diagonal regularization
+        identity = torch.eye(result.size(-1), device=result.device, dtype=result.dtype)
+        result = result + self.epsilon * identity
+        
+        return result
 
 
 class ReEig(nn.Module):
@@ -71,11 +80,11 @@ class SPDNet(nn.Module):
         self.final_dim = bimap2_out
         
         # Layer 1: 30 -> 20
-        self.bimap1 = BiMap(input_dim, bimap1_out)
+        self.bimap1 = BiMap(input_dim, bimap1_out, epsilon)  # ADD epsilon
         self.reeig1 = ReEig(epsilon)
         
         # Layer 2: 20 -> 15
-        self.bimap2 = BiMap(bimap1_out, bimap2_out)
+        self.bimap2 = BiMap(bimap1_out, bimap2_out, epsilon)  # ADD epsilon
         self.reeig2 = ReEig(epsilon)
         
         # Mapping to tangent space

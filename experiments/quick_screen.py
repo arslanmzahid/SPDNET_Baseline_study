@@ -82,7 +82,7 @@ def quick_screen(
             trials,
             strategy=norm_strategy,
             trace_norm=trace_norm,
-            epsilon=1e-6,
+            epsilon=1e-4,
             verbose=True
         )
         
