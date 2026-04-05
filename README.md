@@ -172,8 +172,8 @@ If you use this code, please cite:
   title  = {SPDNet Baseline Study: EEG-Based Fatigue Detection
             Using Riemannian Geometry},
   note   = {MSc Artificial Intelligence project,
-            University of Doha for Science and Technology (UDST)},
-  year   = {2025},
+            Istanbul Bilgi Univeristy - Türkiye},
+  year   = {2026},
   url    = {https://github.com/arslanmzahid/SPDNET_Baseline_study}
 }
 ```
