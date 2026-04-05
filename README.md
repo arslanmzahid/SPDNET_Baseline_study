@@ -167,12 +167,14 @@ The best configuration is saved as JSON and loaded automatically by Stage 3.
 If you use this code, please cite:
 
 ```bibtex
-@mastersthesis{zahid2025spdnet,
+@misc{zahid2025spdnet,
   author = {Arslan Muhammad Zahid},
-  title  = {EEG-Based Fatigue Detection Using Riemannian Geometry
-            and Transformer-Based Dual-Branch Architecture},
-  school = {University of Doha for Science and Technology (UDST)},
-  year   = {2025}
+  title  = {SPDNet Baseline Study: EEG-Based Fatigue Detection
+            Using Riemannian Geometry},
+  note   = {MSc Artificial Intelligence project,
+            University of Doha for Science and Technology (UDST)},
+  year   = {2025},
+  url    = {https://github.com/arslanmzahid/SPDNET_Baseline_study}
 }
 ```
 
